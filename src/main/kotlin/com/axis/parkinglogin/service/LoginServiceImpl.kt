@@ -18,7 +18,6 @@ class LoginServiceImpl : ILoginService {
         return iUserDAO.save(user)
     }
 
-
     override fun login(user: User): User? {
 
         return iUserDAO.save(user)

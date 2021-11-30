@@ -5,6 +5,7 @@ import com.axis.parkinglogin.dto.Message
 import com.axis.parkinglogin.dto.SignUpDTO
 import com.axis.parkinglogin.model.User
 import com.axis.parkinglogin.service.ILoginService
+import com.axis.parkinglogin.util.FiegnServiceUtil
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,6 +23,8 @@ import javax.servlet.http.HttpServletResponse
 class LoginController {
     @Autowired
     private lateinit var iLoginService: ILoginService
+    @Autowired
+    private lateinit var iFiegnServiceUtil:FiegnServiceUtil
     @PostMapping("/signup")
     fun signUp(@RequestBody body:  SignUpDTO):ResponseEntity<User?>{
         val user = User()
@@ -49,9 +52,9 @@ class LoginController {
                 .signWith(SignatureAlgorithm.HS512, "secret").compact()
 
         //Cookie code commented START
-//        val cookie = Cookie("jwt", jwt)
-//        cookie.isHttpOnly = true
-//        response.addCookie(cookie)
+        val cookie = Cookie("jwt", jwt)
+        cookie.isHttpOnly = true
+        response.addCookie(cookie)
         //Cookie code commented END
 
         //Build array START(HASHMAP)
@@ -68,8 +71,8 @@ class LoginController {
     }
 
     @GetMapping("/user")
-    fun user(@RequestHeader("Authorization")  jwt: String?): ResponseEntity<Any> {
-
+//    fun user(@RequestHeader("Authorization")  jwt: String?): ResponseEntity<Any> { //When token is sent from header
+    fun user(@CookieValue("jwt") jwt: String?): ResponseEntity<Any> {
         try {
             if (jwt == null) {
                 return ResponseEntity.status(401).body(Message("unauthenticated"))
@@ -80,7 +83,7 @@ class LoginController {
 //            return ResponseEntity.ok(iLoginService.getById(body.issuer.toInt()))
         } catch (e: Exception) {
             println(e)
-            return ResponseEntity.status(401).body(Message("unauthenticated"))
+            return ResponseEntity.status(401).body(Message("Unauthenticated"))
         }
     }
 
@@ -91,6 +94,13 @@ class LoginController {
 
         response.addCookie(cookie)
 
-        return ResponseEntity.ok(Message("success"))
+        return ResponseEntity.ok(Message("Successful Logout"))
+    }
+
+    @GetMapping("getBookings")
+    fun getBookings(response: HttpServletResponse): ResponseEntity<Any> {
+
+        var getBookings =  iFiegnServiceUtil.getAllBooking()
+        return ResponseEntity(getBookings,HttpStatus.OK)
     }
 }
