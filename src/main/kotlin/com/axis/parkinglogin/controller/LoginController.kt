@@ -11,24 +11,39 @@ import io.jsonwebtoken.SignatureAlgorithm
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.BindingResult
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
-import java.lang.Exception
 import java.util.*
 import javax.servlet.http.Cookie
 import javax.servlet.http.HttpServletResponse
+import javax.validation.Valid
 
 
 @RestController
+@Validated
 @RequestMapping("/parking")
 class LoginController {
     @Autowired
     private lateinit var iLoginService: ILoginService
     @Autowired
     private lateinit var iFiegnServiceUtil:FiegnServiceUtil
+
     @PostMapping("/signup")
-    fun signUp(@RequestBody body:  SignUpDTO):ResponseEntity<User?>{
+    fun signUp( @RequestBody @Valid body:SignUpDTO, bindingResult : BindingResult):ResponseEntity<Any?>{
+        println(bindingResult)
+        if (bindingResult.hasErrors()) {
+            println("some error occured")
+            val errors = bindingResult.fieldErrors
+            val errorList: MutableList<String?> = ArrayList()
+            for (f in errors) {
+                errorList.add(f.defaultMessage)
+            }
+            return ResponseEntity(errorList, HttpStatus.OK)
+        }
+
         val user = User()
-        user._id = body._id.toInt()
+//        user._id = body._id.toInt()
         user.name = body.name
         user.email = body.email
         user.mobileNo = body.mobileNo
@@ -45,6 +60,7 @@ class LoginController {
         if (!user.comparePassword(body.password)) {
             return ResponseEntity.badRequest().body(Message("Invalid password!"))
         }
+//        val issuer = user._id.toString()
         val issuer = user._id.toString()
         val jwt = Jwts.builder()
                 .setIssuer(issuer)

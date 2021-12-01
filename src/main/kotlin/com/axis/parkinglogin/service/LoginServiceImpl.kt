@@ -14,8 +14,8 @@ class LoginServiceImpl : ILoginService {
     private lateinit var iUserDAO: IUserDAO
 
     override fun signUp(user: User): User? {
-
         return iUserDAO.save(user)
+
     }
 
     override fun login(user: User): User? {
@@ -26,6 +26,7 @@ class LoginServiceImpl : ILoginService {
     override fun findByEmail(email: String): User? {
         return iUserDAO.findByEmail(email)
     }
+
 
     override fun getById(id: Int): Optional<User?> {
         return iUserDAO.findById(id)
