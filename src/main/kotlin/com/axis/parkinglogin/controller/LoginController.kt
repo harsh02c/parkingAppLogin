@@ -6,6 +6,7 @@ import com.axis.parkinglogin.dto.SignUpDTO
 import com.axis.parkinglogin.model.User
 import com.axis.parkinglogin.service.ILoginService
 import com.axis.parkinglogin.util.FiegnServiceUtil
+import com.axis.parkinglogin.util.JwtUtil
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,12 +23,15 @@ import javax.validation.Valid
 
 @RestController
 @Validated
-@RequestMapping("/parking")
+@RequestMapping("/parking-auth")
 class LoginController {
     @Autowired
     private lateinit var iLoginService: ILoginService
     @Autowired
     private lateinit var iFiegnServiceUtil:FiegnServiceUtil
+
+    @Autowired
+    private val jwtUtil: JwtUtil? = null
 
     @PostMapping("/signup")
     fun signUp( @RequestBody @Valid body:SignUpDTO, bindingResult : BindingResult):ResponseEntity<Any?>{
@@ -62,10 +66,13 @@ class LoginController {
         }
 //        val issuer = user._id.toString()
         val issuer = user._id.toString()
-        val jwt = Jwts.builder()
-                .setIssuer(issuer)
-                .setExpiration(Date(System.currentTimeMillis() + 60 * 24 * 1000)) // 1 day
-                .signWith(SignatureAlgorithm.HS512, "secret").compact()
+        //Old code to create token
+//        val jwt = Jwts.builder()
+//                .setIssuer(issuer)
+//                .setExpiration(Date(System.currentTimeMillis() + 60 * 24 * 1000)) // 1 day
+//                .signWith(SignatureAlgorithm.HS512, "secret").compact()
+        //New code to create token
+        val jwt  = jwtUtil?.generateToken(issuer)!!
 
         //Cookie code commented START
         val cookie = Cookie("jwt", jwt)
