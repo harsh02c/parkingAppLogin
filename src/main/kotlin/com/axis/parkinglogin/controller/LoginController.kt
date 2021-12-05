@@ -22,7 +22,6 @@ import javax.validation.Valid
 
 
 @RestController
-@Validated
 @RequestMapping("/parking-auth")
 class LoginController {
     @Autowired
@@ -34,10 +33,10 @@ class LoginController {
     private val jwtUtil: JwtUtil? = null
 
     @PostMapping("/signup")
-    fun signUp( @RequestBody @Valid body:SignUpDTO, bindingResult : BindingResult):ResponseEntity<Any?>{
-        println(bindingResult)
+    @Throws(Exception::class)
+    fun signUp( @RequestBody @Valid body:  SignUpDTO, bindingResult : BindingResult):ResponseEntity<Any?>{
+
         if (bindingResult.hasErrors()) {
-            println("some error occured")
             val errors = bindingResult.fieldErrors
             val errorList: MutableList<String?> = ArrayList()
             for (f in errors) {
@@ -46,22 +45,38 @@ class LoginController {
             return ResponseEntity(errorList, HttpStatus.OK)
         }
 
+        val emailCheck = iLoginService.findByEmail(body.email.toString())
+
+        if (emailCheck != null) {
+            return ResponseEntity("Email already Exists", HttpStatus.OK)
+        }
+
         val user = User()
 //        user._id = body._id.toInt()
-        user.name = body.name
-        user.email = body.email
-        user.mobileNo = body.mobileNo
-        user.password = body.password
+        user.name = body.name.toString()
+        user.email = body.email.toString()
+        user.mobileNo = body.mobileNo.toString()
+        user.password = body.password.toString()
 
-        var signup =iLoginService.signUp(user)
+        var signup = iLoginService.signUp(user)
         return ResponseEntity(signup, HttpStatus.OK)
+
     }
     @PostMapping("/login")
-    fun login(@RequestBody body: LoginDTO, response: HttpServletResponse): ResponseEntity<Any> {
-        val user = iLoginService.findByEmail(body.email)
+    fun login(@RequestBody @Valid body: LoginDTO, response: HttpServletResponse,bindingResult: BindingResult): ResponseEntity<Any> {
+
+        if (bindingResult.hasErrors()) {
+            val errors = bindingResult.fieldErrors
+            val errorList: MutableList<String?> = ArrayList()
+            for (f in errors) {
+                errorList.add(f.defaultMessage)
+            }
+            return ResponseEntity(errorList, HttpStatus.OK)
+        }
+        val user = iLoginService.findByEmail(body.email.toString())
                 ?: return ResponseEntity.badRequest().body(Message("User not found!"))
 
-        if (!user.comparePassword(body.password)) {
+        if (!user.comparePassword(body.password.toString())) {
             return ResponseEntity.badRequest().body(Message("Invalid password!"))
         }
 //        val issuer = user._id.toString()

@@ -14,14 +14,9 @@ class User {
     @Id
     var _id: ObjectId? = null
 //    var _id:Int=0
-    @NotBlank(message = "Name is mandatory")
     var name=""
-    @NotBlank(message = "MobileNo is mandatory")
     var mobileNo=""
-    @NotBlank(message = "Email is mandatory")
-    @Email(message = "Email is Not valid")
     var email=""
-    @NotBlank(message = "Email is mandatory")
     var password=""
         @JsonIgnore
         get()=field
