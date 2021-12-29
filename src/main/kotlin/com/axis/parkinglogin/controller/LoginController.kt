@@ -8,19 +8,16 @@ import com.axis.parkinglogin.service.ILoginService
 import com.axis.parkinglogin.util.FiegnServiceUtil
 import com.axis.parkinglogin.util.JwtUtil
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.BindingResult
-import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
-import java.util.*
 import javax.servlet.http.Cookie
 import javax.servlet.http.HttpServletResponse
 import javax.validation.Valid
 
-
+@CrossOrigin
 @RestController
 @RequestMapping("/parking-auth")
 class LoginController {
@@ -62,6 +59,8 @@ class LoginController {
         return ResponseEntity(signup, HttpStatus.OK)
 
     }
+
+    @Throws(Exception::class)
     @PostMapping("/login")
     fun login(@RequestBody @Valid body: LoginDTO, response: HttpServletResponse,bindingResult: BindingResult): ResponseEntity<Any> {
 
@@ -71,26 +70,36 @@ class LoginController {
             for (f in errors) {
                 errorList.add(f.defaultMessage)
             }
-            return ResponseEntity(errorList, HttpStatus.OK)
+            return ResponseEntity(errorList, HttpStatus.BAD_REQUEST)
         }
         val user = iLoginService.findByEmail(body.email.toString())
-                ?: return ResponseEntity.badRequest().body(Message("User not found!"))
+                ?: return ResponseEntity(Message("User not found!"), HttpStatus.UNAUTHORIZED)
+
 
         if (!user.comparePassword(body.password.toString())) {
-            return ResponseEntity.badRequest().body(Message("Invalid password!"))
+//            return ResponseEntity.badRequest().body(Message("Invalid password!"))
+
+            return ResponseEntity(Message("Invalid password!"), HttpStatus.UNAUTHORIZED)
         }
 //        val issuer = user._id.toString()
         val issuer = user._id.toString()
         //Old code to create token
-//        val jwt = Jwts.builder()
+//        try {
+//            val jwt = Jwts.builder()
 //                .setIssuer(issuer)
 //                .setExpiration(Date(System.currentTimeMillis() + 60 * 24 * 1000)) // 1 day
-//                .signWith(SignatureAlgorithm.HS512, "secret").compact()
+//                .signWith(SignatureAlgorithm.HS512, user.email).compact()
+//        }catch  (e: Exception) {
+//            println(e)
+//            return ResponseEntity.status(401).body(e)
+//        }
         //New code to create token
-        val jwt  = jwtUtil?.generateToken(issuer)!!
+
+            val jwt  = jwtUtil?.generateToken(issuer)!!
+
 
         //Cookie code commented START
-        val cookie = Cookie("jwt", jwt)
+        val cookie = Cookie("jwt",  jwt)
         cookie.isHttpOnly = true
         response.addCookie(cookie)
         //Cookie code commented END
